@@ -1,0 +1,14 @@
+[Unit]
+Description=MicroGovee Service
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+WorkingDirectory=/PATH/TO/YOUR/microgovee
+ExecStart=/PATH/TO/YOUR/microgovee/.venv/bin/gunicorn --bind 0.0.0.0:5000 microgovee:app
+
+[Install]
+WantedBy=multi-user.target
