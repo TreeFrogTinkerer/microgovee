@@ -6,6 +6,8 @@ Govee has a UDP based API for a subset of their products. Which work. And are fa
 
 * Autodetect Govee devices on LAN network that have the LAN network feature enabled
    - Not auto loaded. A companion file allows you to copy them into MicroGovee config file
+* Autodetect very selected Govee Bluetooth devices
+   - Not auto loaded. A companion file allows you to copy them into MicroGovee config file
 * Allows custom short names to be associated in json config file 
 * Multiple devices can be controlled from the same API end point
 * Lightweight -- written in python
@@ -86,7 +88,7 @@ There are 2 ways you can populate this data.  The first is to manually add it in
 ## Manually Add, Edit, Remove, or Change Govee Devices
 
 > [!IMPORTANT]
-> Manually adding is ONLY recommended for UDP Lights as Bluetooth devices need a pairing sequence connect
+> Manually adding is ONLY recommended for UDP Lights as Bluetooth devices need a pairing sequence to connect
 
 Run
 
@@ -171,7 +173,7 @@ There are separate helper scripts for UDP lights and for H5080 Bluetooth Plugs.
 
 ### UDP Lights
 
-There is a script that will send a multicast UDP packet onto your network and listen for device responses for 5 seconds.  It then parses them and creates the DATA block that goes between the curly brackets. It then writes it to the `./config/founddevices.txt` file. Where you can copy and paste them into the goveedevices.json.
+There is a script that will send a multicast UDP packet onto your network and listen for device responses for 5 seconds.  It then parses them and creates the DATA block that goes between the curly brackets. It then writes it to the `./config/udp-founddevices.txt` file. Where you can copy and paste them into the goveedevices.json.
 
 > [!IMPORTANT]
 > This isn't a highly configured script so sometimes with multiple devices responding at once it can miss devices.  If this happens run it again or a third time. If it continues to not get all your devices manually configure them as above.
@@ -568,6 +570,8 @@ Each command returns the following JSON formatted information
     "status": "off"
 }
 ```
+
+## Errors
 
 Unless you send a bad API call in which case you will get an error in the following JSON format:
 
