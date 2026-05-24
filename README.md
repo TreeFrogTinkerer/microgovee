@@ -16,7 +16,7 @@ Govee has a UDP based API for a subset of their products. Which work. And are fa
 
 # Supported Devices
 
-- [x] Govee UDP Lights -- [See supported devices](https://app-h5.govee.com/user-manual/wlan-guide)
+- [x] Govee UDP Lights : [See supported devices](https://app-h5.govee.com/user-manual/wlan-guide)
 - [x] Govee H5080 Bluetooth Plugs
 - [ ] Govee H5075 Thermometer / Humidity Sensor  
 
