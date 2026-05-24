@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
-import subprocess, socket, json, time
+import subprocess, socket, json, time,asyncio, time
+import H5080
 
-# Import IPs and shortnames
+# Import IPs and shortnames for UDP Devices
 
 with open('./config/goveedevices.json', 'r') as file:
     devicedata = json.load(file)
@@ -60,7 +61,38 @@ def govee_lan(devicename, data):
 		# Return the current status
 		return data3
 
+def govee_bt_5080(usernamed, action):
+    for y in devicedata["devices"]:
+        if y["name"] == usernamed:
+            device_name = y["goveename"]
+            pairing_code = y["btpaircode"]
+            break
+        
+    if 'device_name' not in locals():
+        return '{"error":"Device name is incorrect"}'
+    else:
+        if action == "status":
+            status=asyncio.run(H5080.status(device_name))
+            if status == "On":
+                return "{\"status\":\"on\"}"
+            elif status == "Off":
+                return "{\"status\":\"off\"}"
+            else:
+                return "{\"status\":\"unknown-status\"}"
+        elif action == "toggle":
+            asyncio.run(H5080.main_toggle(device_name,pairing_code))
+            time.sleep(0.5)
+            status=asyncio.run(H5080.status(device_name))
+            if status == "On":
+                return "{\"status\":\"on\"}"
+            elif status == "Off":
+                return "{\"status\":\"off\"}"
+            else:
+                return "{\"status\":\"unknown-status\"}"
+        else:
+            return '{"error":"Invalid action for ble-power family"}'
 
+    
 # This section generates the api endpoint and the commands it accepts. And what it returns.
 app = Flask(__name__)
 
@@ -131,11 +163,21 @@ def handle_json():
 
 
         case "ble-power":
-            return '{"Power outlets are not supprted at this time"}'                  
+            match action:
+                case "devstatus":
+                    return govee_bt_5080(deviceid, "status")
+                case "toggle":
+                    return govee_bt_5080(deviceid, "toggle")
+                case _:
+                    return '{"error":"Invalid action for ble-power family"}'
+            #return '{"Power outlets are not supprted at this time"}'                  
+
+
         case "ble-temphumidity":
             return '{"Humidity/Temperature senors are not supported at this time"}'
         case _:
             return '{"There are no commands associated with that family. Check your family and send again."}'
+
 
 # Starts the server if run with a gunicorn front end
 if __name__ == '__main__':
