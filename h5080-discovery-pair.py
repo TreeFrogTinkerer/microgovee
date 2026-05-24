@@ -16,7 +16,6 @@ logging.basicConfig(
         format="%(asctime)-15s %(levelname)s: %(message)s",
     )
 logger = logging.getLogger(__name__)
-# logger.level = logging.DEBUG
 
 async def main():
     stop_event = asyncio.Event()
@@ -34,14 +33,11 @@ async def main():
             for mfr_id, mfr_data in adv.manufacturer_data.items():
                 is_on = mfr_data[-1] == 0x01
                 state_name = "On" if is_on else "Off"
-                #exists = any(adv.local_name in sublist for sublist in founddevices)
-                #print(exists)
                 check = [adv.local_name , device.address]
                 if check in founddevices:
                     logger.info(f"Detected Device")
                 else:
                     founddevices.append([adv.local_name, device.address])
-                    #print("Added it!")
                     logger.info(f"Undetected Device: {adv.local_name}: state={state_name} (address={device.address}, mfr_data={mfr_data.hex()}) ")
 
     async with BleakScanner(callback) as scanner:
@@ -50,11 +46,7 @@ async def main():
         await stop_event.wait() 
 
 asyncio.run(main())
-#for device in founddevices:
-#    output=subprocess.run(["python", "2pair.py","-dn",device[0]],capture_output=True, text=True)
 
-## Configuration
-#DEVICE_NAME_2 = "ihoment_H5080_6B2B"
 MSG_GET_AUTH_KEY = "aab100000000000000000000000000000000001b"
 
 logging.basicConfig(
@@ -62,7 +54,6 @@ logging.basicConfig(
   format="%(asctime)-15s %(levelname)s: %(message)s"
 )
 logger = logging.getLogger(__name__)
-# logger.level = logging.DEBUG
 
 
 async def main2(DEVICE_NAME_2):
@@ -121,8 +112,6 @@ with open('./config/H5080DeviceCodes.csv', mode='r', newline='\n') as file:
     reader = csv.reader(file)
     for row in reader:
         alreadydevices.append(f"{row[0]}")
-    
-#print(alreadydevices)
 
 for device2pair in founddevices:
     if device2pair[0] not in alreadydevices:
