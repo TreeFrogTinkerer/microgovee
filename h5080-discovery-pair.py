@@ -117,7 +117,7 @@ async def send_get_auth_key(client):
 
 # # #
 
-with open('H5080DeviceCodes.csv', mode='r', newline='\n') as file:
+with open('./config/H5080DeviceCodes.csv', mode='r', newline='\n') as file:
     reader = csv.reader(file)
     for row in reader:
         alreadydevices.append(f"{row[0]}")
@@ -130,14 +130,14 @@ for device2pair in founddevices:
         paireddevice=[]
         asyncio.run(main2(device2pair[0]))
 
-        with open("H5080DeviceCodes.csv", "w") as file:
+        with open("./config/H5080DeviceCodes.csv", "a") as file:
             file.write(f"{device2pair[0]},{device2pair[1]},{paireddevice[0][0]}\n")
 
 count=1
-with open('H5080DeviceCodes.csv', mode='r', newline='\n') as file:
+with open('./config/H5080DeviceCodes.csv', mode='r', newline='\n') as file:
     reader = csv.reader(file)
     for device in reader:
-        with open("H5080Devices.txt", "w") as f:
+        with open("./config/H5080Devices.txt", "w") as f:
             f.write("----- New Item ----\n")
             f.write(f"\"id\":{count},\n")
             f.write(f"\"sku\":\"H5080\",\n")

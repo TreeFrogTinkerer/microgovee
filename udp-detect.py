@@ -43,13 +43,13 @@ finally:
     recv_sock.close()
 
 # Initialize and overwrite previous outputs
-with open("./config/founddevices.txt", "w") as f:
+with open("./config/udp-founddevices.txt", "w") as f:
     f.write("Detected Govee Devices...\n")
 
 # Go through the matrix and output the almost JSON to the text file for each device found
 count=1
 for located in devicesfound:
-    with open("./config/founddevices.txt", "a") as f:
+    with open("./config/udp-founddevices.txt", "a") as f:
         f.write("----- New Item ----\n")
         f.write(f"\"id\":{count},\n")
         f.write(f"\"ip\":\"{located[0]}\",\n")

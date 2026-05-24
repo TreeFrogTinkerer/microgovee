@@ -34,6 +34,10 @@ Complexity and size.  They are both great products. They excel at what they do. 
 
 # Prerequisites
 
+## Hardware
+
+Wi-Fi enabled device and/or Bluetooth enabled device if using Bluetooth devices
+
 ## Manual Installed
 
 Make sure your system has the following packages installed before running the install script:
@@ -46,6 +50,7 @@ Make sure your system has the following packages installed before running the in
 
 * flask
 * gunicorn
+* bleak (for Bluetooth Devices)
 
 # To Install
 
@@ -60,7 +65,7 @@ source ./install.sh
 
 # Configuration
 
-Before you can send commands to it you need to tell the API Server what your Govee devices IP addresses are.  This information is stored in `./config/goveedevices.json`
+Before you can send commands to the API you need to tell the API Server what your Govee devices IP/Bluetooth addresses are.  This information is stored in `./config/goveedevices.json`
 
 By default MicroGovee ships with an empty device list.  
 ```
@@ -80,6 +85,9 @@ There are 2 ways you can populate this data.  The first is to manually add it in
 
 ## Manually Add, Edit, Remove, or Change Govee Devices
 
+> [!IMPORTANT]
+> Manually adding is ONLY recommended for UDP Lights as Bluetooth devices need a pairing sequence connect
+
 Run
 
 `nano ./config/goveedevices.json`
@@ -97,6 +105,8 @@ The correct format is as follows:
       "ip":"192.168.1.x",
       "sku":"H1401",
       "goveeid":"SO:ME:MA:C0:ADD:RE:SS:00",
+	  "goveename":"BLUETOOTHDEVICESONLY",
+      "btpaircode":"BLUETOOTHDEVICESONLY",
       "name":"bedroom"
     },
     {
@@ -104,6 +114,8 @@ The correct format is as follows:
       "ip":"192.168.1.y",
       "sku":"H61BA",
       "goveeid":"SO:ME:MA:C0:ADD:RE:SS:01",
+	  "goveename":"BLUETOOTHDEVICESONLY",
+	  "btpaircode":"BLUETOOTHDEVICESONLY",
       "name":"kitchen"
     },
     {
@@ -111,21 +123,31 @@ The correct format is as follows:
       "ip":"192.168.1.z",
       "sku":"H1401",
       "goveeid":"SO:ME:MA:C0:ADD:RE:SS:02",
-      "name":"bathroom"
+      "goveename":"BLUETOOTHDEVICESONLY",
+      "btpaircode":"BLUETOOTHDEVICESONLY",
+	  "name":"bathroom"
     }
   ]
 }
 ```
 
-The following three fields are required for MicroGovee use:
+The following three fields are required for ALL MicroGovee Device use:
 1) id - Random Integer of no impact -- This isn't actively used but allows each record to be absolutely accessed if need be ie - good practice
-2) ip - This is where the API is going to send the UDP commands to. It is recommended that your devices have static or reserved IPs to make this persistent
-3) name - This is the human notable name for the device. This is used when calling the API to direct commands. MicroGovee uses this field to lookup the IP field before sending the UDP commands
+2) name - This is the human notable name for the device. This is used when calling the API to direct commands. MicroGovee uses this field to lookup the IP field before sending the UDP commands
+
+Required for UDP Lights:
+
+3) ip - This is where the API is going to send the UDP commands to. It is recommended that your devices have static or reserved IPs to make this persistent
+
+Required for Govee Bluetooth Devices:
+
+4) goveename - This is the name of the device bluetooth reports/responds to
+5) btpaircode - This is the code recieved after pairing Bluetooth devices to the server 
 
 The following two commands are optional. Both are returned by the device's announcements of themselves on the network.  I believe the CloudAPI uses the goveeid (called 'device' in the raw data) to send the commands to. In MicroGovee they are included for completeness and future proofing.
  
-4) sku - This is the product model. It is returned by the device during query for devices on the network s
-5) goveeid - This is the device 'id' the device itself returns. I believe this to be the MAC address.
+6) sku - This is the product model. It is returned by the device during query for devices on the network s
+7) goveeid - This is the device 'id' the device itself returns. I believe this to be the MAC address.
 
 And as with JSON formatting REALLY matters.  Make sure between each device you include a "," and no comma after the last item.
 ```
@@ -145,6 +167,10 @@ And as with JSON formatting REALLY matters.  Make sure between each device you i
 ```
 ## Helper Script / Semi-Automated
 
+There are separate helper scripts for UDP lights and for H5080 Bluetooth Plugs.  
+
+### UDP Lights
+
 There is a script that will send a multicast UDP packet onto your network and listen for device responses for 5 seconds.  It then parses them and creates the DATA block that goes between the curly brackets. It then writes it to the `./config/founddevices.txt` file. Where you can copy and paste them into the goveedevices.json.
 
 > [!IMPORTANT]
@@ -152,11 +178,11 @@ There is a script that will send a multicast UDP packet onto your network and li
 
 To run:
 
-`python3 bootupdetect.py`
+`python3 udp-detect.py`
 
 Then to open your results:
 
-`nano ./config/founddevices.txt`
+`nano ./config/udp-founddevices.txt`
 
 This will look something like:
 
@@ -179,6 +205,67 @@ Detected Govee Devices...
 "ip":"192.168.1.z",
 "sku":"H1401",
 "goveeid":"SO:ME:MA:C0:ADD:RE:SS:02",
+"name":""
+```
+
+If the script is successful in IDing devices on your network MOST of the information you need should be in this screen.  The human use name is of course is blank.
+
+To use copy the text between the ---- New Item ---- and the next one (or end of the page) and paste between curly brackets in the configuration file. 
+
+> [!IMPORTANT]
+> Don't forget to add { before AND after } your paste! And if you need the all important comma do that too!
+
+Once pasted in add a name between the "s for your device
+
+### H5080 Bluetooth plug
+
+> [!IMPORTANT]
+> It is HIGHLY recommended to use the script for Bluetooth devices as you need to pair and get the correct code which this script does
+
+`python3 h5080-discovery-pair.py`
+
+This script...
+* Listens for Govee bluetooth devices for 30 seconds
+* Then checks if seen devices have been paired before (ie retrieve a pairing code)
+* If no code is found it then  tries to pair with the bluetooth plug
+   * This entails pressing the button on the plug to finalaize the process
+   
+This files creates 2 files:
+
+`./config/H5080DeviceCodes.csv` & `./config/H5080Devices.txt`
+
+The H5080DeviceCodes.csv is where pairing codes are stored are appended each run of the Script and not removed
+
+The H5080Devices.txt file is rewritten each time from H5080DeviceCodes.csv devices (So can't store the pairing code with multiple runs)
+
+Then to open your results:
+
+`nano ./config/H5080devices.txt`
+
+This will look something like:
+
+```
+Detected Govee Devices...
+----- New Item ----
+"id":1,
+"sku":"H5080",
+"goveeid":"SO:ME:MA:C0:ADD:RE:SS:00",
+"goveename":"BLUETOOTHDEVICESONLY",
+"btpaircode":"BLUETOOTHDEVICESONLY",
+"name":""
+----- New Item ----
+"id":2,
+"sku":"H5080",
+"goveeid":"SO:ME:MA:C0:ADD:RE:SS:01",
+"goveename":"BLUETOOTHDEVICESONLY",
+"btpaircode":"BLUETOOTHDEVICESONLY",
+"name":""
+----- New Item ----
+"id":3,
+"sku":"H5080",
+"goveeid":"SO:ME:MA:C0:ADD:RE:SS:02",
+"goveename":"BLUETOOTHDEVICESONLY",
+"btpaircode":"BLUETOOTHDEVICESONLY",
 "name":""
 ```
 
@@ -286,6 +373,7 @@ The API is broken up into 3 main 'sections'.
 1) Family - This is the type of device you want to control. Right now the only one that is supported is lighting but maybe in the future some more will be added
    - Current Option(s): 
        - light
+	   - ble-power
 2) Action - This is what you want it to DO.
    - Current Options:
        - devStatus - Just returns the device status
@@ -302,10 +390,12 @@ Now let's look at a JSON string for each command. In each example we will use th
 > [!NOTE]
 > Atributes ARE case sensitive. They are ALL lowercase.
 
+## Govee UDP Lights
+`"family":"light"`
 
 ### devStatus
 
-`"action":"devstatus"
+`"action":"devstatus"`
 
 This action has no custom attributes. 
 
@@ -408,7 +498,46 @@ Example - This turns the kitchen light on:
 }
 ```
 
+## H5080 Bluetooth Plugs
+
+`"family":"ble-power"`
+
+### devStatus
+
+`"action":"devstatus"`
+
+This action takes zero custom attributes.
+
+Example - This returns the kitchenplug status:
+
+```
+{
+    "family": "ble-power",
+    "action": "devstatus",
+    "devicename": "kitchenplug"
+}
+```
+
+### toggle
+
+`"action":"toggle"`
+
+This action takes zero custom attributes.
+
+Example - This toggles the kitchenplug:
+(If the plug is on it turns off and vice versa) 
+
+```
+{
+    "family": "ble-power",
+    "action": "toggle",
+    "devicename": "kitchenplug"
+}
+```
+
 # Returned Data
+
+## UDP Lights
 
 Each command returns the following JSON formatted information as a pass through from the UDP API
 
@@ -430,6 +559,16 @@ Each command returns the following JSON formatted information as a pass through 
 }
 ```
 
+## H5080 Bluetooth Plugs
+
+Each command returns the following JSON formatted information
+
+```
+{
+    "status": "off"
+}
+```
+
 Unless you send a bad API call in which case you will get an error in the following JSON format:
 
 ```
@@ -437,5 +576,17 @@ Unless you send a bad API call in which case you will get an error in the follow
 	"error":"....Error details here...."
 }
 ```
-	   
-	   
+	  
+	  
+	  
+# Sources
+
+## Govee UDP API
+
+[Straight from Govee](https://app-h5.govee.com/user-manual/wlan-guide)
+
+## H5080 Bluetooth Plugs
+
+Not only is the protocol but most of the code for H5080 Bluetooth Plugs are from [Govee-Reverse-Engineering Github Project](https://github.com/egold555/Govee-Reverse-Engineering).
+
+I edited and adapted the scripts here to this specific usage but I'd estimate the codebase is about 96% from the source. I wouldn't have been able to do it without the fanstic work done!
