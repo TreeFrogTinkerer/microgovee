@@ -14,11 +14,15 @@ Govee has a UDP based API for a subset of their products. Which work. And are fa
 * Extensible to other Govee products in the API structure
 * Docker container offered
 
+# Supported Devices
+
+- [x] Govee UDP Lights
+- [x] Govee H5080 Bluetooth Plugs
+- [ ] Govee H5075 Thermometer / Humidity Sensor  
+
 # Future Feature Possibilities
 
-While Govee has published the UDP API for their light products other products are Bluetooth only, etc. This API setup has the ability to expand to other Govee products. Ideally, using only the Bluetooth on the host and the Govee device. No extra bridge or gateway. Items such as...
-* H5040 Bluetooth enabled plug
-* H5075 Thermometer / Humidity Sensor
+While Govee has published the UDP API for their light products other products are Bluetooth only, etc. This API setup has the ability to expand to other Govee devices in addition to the ones supported above. 
 
 # Why not GoveeCloud API?
 
